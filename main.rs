@@ -20,8 +20,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-/*
- */
 use tellusim::*;
 use std::process::exit;
 
@@ -110,9 +108,9 @@ fn create_image(size: u32, frame: u32) -> Image {
 	for y in 0..size {
 		for x in 0..size {
 			let v = (((x as i32 - (frame ^ y) as i32) as u32 ^ (y + (frame ^ x))) & 255) as f32 / 63.0;
-			color.r = (f32::cos(3.14 * 1.0 + v) * 127.5 + 127.5) as u32;
-			color.g = (f32::cos(3.14 * 0.5 + v) * 127.5 + 127.5) as u32;
-			color.b = (f32::cos(3.14 * 0.0 + v) * 127.5 + 127.5) as u32;
+			color.r = (f32::cos(PI * 1.0 + v) * 127.5 + 127.5) as u32;
+			color.g = (f32::cos(PI * 0.5 + v) * 127.5 + 127.5) as u32;
+			color.b = (f32::cos(PI * 0.0 + v) * 127.5 + 127.5) as u32;
 			sampler.set2d(x, y, &color);
 		}
 	}
@@ -140,7 +138,15 @@ fn main() {
 	
 	window.set_keyboard_pressed_callback({
 		let mut window = window.copy_ptr();
-		move |key: u32, _code: u32| { if key == WindowKey::Esc as u32 { window.stop(); } }
+		move |key: u32, _code: u32| {
+			if key == WindowKey::Esc as u32 { window.stop(); }
+			if key == WindowKey::F12 as u32 {
+				let mut image = Image::new();
+				if window.grab(&mut image) && image.save("screenshot.png") {
+					ts_log!(Message, "Screenshot\n");
+				}
+			}
+		}
 	});
 	
 	let title = window.platform_name() + &" Tellusim::Rust";
@@ -157,6 +163,19 @@ fn main() {
 	// create target
 	let mut target = device.create_target_with_window(&mut window);
 	if !target.is_valid_ptr() { exit(1) }
+	
+	// build info
+	ts_logf!(Message, "Build: {0}\n", App::build_info());
+	
+	////////////////////////////////
+	// core test
+	////////////////////////////////
+	
+	let mut blob = Blob::new();
+	blob.write_string_with_str(&title);
+	
+	blob.seek(0);
+	ts_logf!(Message, "Stream: {0}\n", blob.read_string());
 	
 	////////////////////////////////
 	// platform test
@@ -218,7 +237,7 @@ fn main() {
 	button.set_align(ControlAlign::Expand);
 	button.set_margin_with_left(0.0, 0.0, 0.0, 16.0);
 	
-	// common parameters color
+	// common parameters
 	#[repr(C)]
 	#[derive(Default)]
 	struct CommonParameters {
@@ -258,7 +277,12 @@ fn main() {
 	
 	// create scene manager
 	let mut scene_manager = SceneManager::new();
-	if !scene_manager.create(&device) { exit(1) }
+	if cfg!(debug_assertions) {
+		if !scene_manager.create_with_flags_func(&device, SceneManagerFlags::DefaultFlags, |progress: u32| { ts_logf!(Message, "SceneManager {0}%   \r", progress); }) { exit(1) }
+		log::print("\n");
+	} else {
+		if !scene_manager.create(&device) { exit(1) }
+	}
 	
 	// process thread
 	let process_thread = std::thread::spawn({
@@ -279,7 +303,12 @@ fn main() {
 	// create render manager
 	let mut render_manager = RenderManager::new_with_manager(&mut scene_manager);
 	render_manager.set_draw_parameters_with_color_depth_multisample(&device, window.color_format(), window.depth_format(), window.multisample());
-	if !render_manager.create(&device) { exit(1) }
+	if cfg!(debug_assertions) {
+		if !render_manager.create_with_flags_func(&device, RenderManagerFlags::DefaultFlags, |progress: u32| { ts_logf!(Message, "RenderManager {0}%   \r", progress); }) { exit(1) }
+		log::print("\n");
+	} else {
+		if !render_manager.create(&device) { exit(1) }
+	}
 	
 	// create render frame
 	let mut render_frame = RenderFrame::new_with_manager(&mut render_manager);
@@ -376,7 +405,7 @@ fn main() {
 			
 			// update scene
 			if !scene.create_with_async(&device, Some(&main_async)) { return false; }
-			scene.set_time(time::seconds());
+			scene.set_time(time);
 			scene.update();
 			
 			// update scene manager
@@ -438,8 +467,8 @@ fn main() {
 			rect.set_texture_flip(false, render_renderer.is_target_flipped());
 			
 			// update controls
-			root.set_viewport_with_widthf32(width, height);
-			root.set_mouse_with_x(mouse_x, mouse_y, buttons);
+			root.set_viewportf32(width, height);
+			root.set_mousef32(mouse_x, mouse_y, buttons);
 			while root.update_with_scale(canvas.scale(&target)) { }
 			
 			// create canvas
@@ -493,5 +522,6 @@ fn main() {
 	// wait thread
 	process_thread.join().ok();
 	
-	print!("Done\n");
+	// done
+	log::print("Done\n");
 }

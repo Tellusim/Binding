@@ -20,8 +20,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-/*
- */
 using System;
 using Tellusim;
 using System.Threading;
@@ -123,9 +121,9 @@ class TellusimCSharp {
 		for(uint y = 0; y < size; y++) {
 			for(uint x = 0; x < size; x++) {
 				float v = (float)(((x - (frame ^ y)) ^ (y + (frame ^ x))) & 255) / 63.0f;
-				color.r = (uint)(Math.Cos(3.14f * 1.0f + v) * 127.5f + 127.5f);
-				color.g = (uint)(Math.Cos(3.14f * 0.5f + v) * 127.5f + 127.5f);
-				color.b = (uint)(Math.Cos(3.14f * 0.0f + v) * 127.5f + 127.5f);
+				color.r = (uint)(Math.Cos(Base.Pi * 1.0f + v) * 127.5f + 127.5f);
+				color.g = (uint)(Math.Cos(Base.Pi * 0.5f + v) * 127.5f + 127.5f);
+				color.b = (uint)(Math.Cos(Base.Pi * 0.0f + v) * 127.5f + 127.5f);
 				sampler.set2D(x, y, color);
 			}
 		}
@@ -148,7 +146,15 @@ class TellusimCSharp {
 		
 		window.setSize(app.getWidth(), app.getHeight());
 		window.setCloseClickedCallback((IntPtr data) => { window.stop(); });
-		window.setKeyboardPressedCallback((uint key, uint code, IntPtr data) => { if(key == (uint)Window.Key.Esc) window.stop(); });
+		window.setKeyboardPressedCallback((uint key, uint code, IntPtr data) => {
+			if(key == (uint)Window.Key.Esc) window.stop();
+			if(key == (uint)Window.Key.F12) {
+				Image image = new Image();
+				if(window.grab(image) && image.save("screenshot.png")) {
+					Log.printf(Log.Level.Message, "Screenshot\n");
+				}
+			}
+		});
 		
 		string title = window.getPlatformName() + " Tellusim::CSharp";
 		if(!window.create(title, Window.Flags.DefaultFlags | Window.Flags.VerticalSync) || !window.setHidden(false)) return;
@@ -164,6 +170,19 @@ class TellusimCSharp {
 		// create target
 		Target target = device.createTarget(window);
 		if(!target) return;
+		
+		// build info
+		Log.printf(Log.Level.Message, "Build: {0}\n", App.getBuildInfo());
+		
+		////////////////////////////////
+		// core test
+		////////////////////////////////
+		
+		Blob blob = new Blob();
+		blob.writeString(title);
+		
+		blob.seek(0);
+		Log.printf(Log.Level.Message, "Stream: {0}\n", blob.readString());
 		
 		////////////////////////////////
 		// platform test
@@ -203,11 +222,11 @@ class TellusimCSharp {
 		
 		// create dialog
 		ControlDialog dialog = new ControlDialog(root, 1, 8.0f, 8.0f);
-		dialog.setUpdatedCallback((ControlDialog dialog, IntPtr data) => {
-			float x = dialog.getPositionX();
-			float y = dialog.getPositionY();
-			float width = dialog.getWidth();
-			float height = dialog.getHeight();
+		dialog.setUpdatedCallback((ControlDialog dialog_, IntPtr data) => {
+			float x = dialog_.getPositionX();
+			float y = dialog_.getPositionY();
+			float width = dialog_.getWidth();
+			float height = dialog_.getHeight();
 			Log.printf(Log.Level.Message, "Dialog Updated {0} {1} {2}x{3}\n", x, y, width, height);
 		});
 		dialog.setAlign(Control.Align.Center);
@@ -219,13 +238,13 @@ class TellusimCSharp {
 		
 		// create button
 		ControlButton button = new ControlButton(dialog, "Button");
-		button.setClickedCallback((ControlButton button, IntPtr data) => {
-			Log.printf(Log.Level.Message, "{0} Clicked\n", button.getText());
+		button.setClickedCallback((ControlButton button_, IntPtr data) => {
+			Log.printf(Log.Level.Message, "{0} Clicked\n", button_.getText());
 		});
 		button.setAlign(Control.Align.Expand);
 		button.setMargin(0.0f, 0.0f, 0.0f, 16.0f);
 		
-		// common parameters color
+		// common parameters
 		CommonParameters parameters = new CommonParameters();
 		parameters.color = Color.white;
 		
@@ -258,13 +277,17 @@ class TellusimCSharp {
 		
 		// create scene manager
 		SceneManager scene_manager = new SceneManager();
-		if(!scene_manager.create(device)) return;
+		#if TS_DEBUG
+			if(!scene_manager.create(device, SceneManager.Flags.DefaultFlags, (uint progress, IntPtr data) => { Log.printf(Log.Level.Message, "SceneManager {0}%   \r", progress); })) return;
+			Log.print("\n");
+		#else
+			if(!scene_manager.create(device)) return;
+		#endif
 		
 		// process thread
 		Thread process_thread = new Thread(() => {
 			while(scene_manager && !scene_manager.isTerminated()) {
-				bool done = !scene_manager.process(process_async);
-				if(done) Time.sleep(1000);
+				if(!scene_manager.process(process_async)) Time.sleep(1000);
 			}
 			Log.print(Log.Level.Message, "Thread Done\n");
 		});
@@ -277,7 +300,12 @@ class TellusimCSharp {
 		// create render manager
 		RenderManager render_manager = new RenderManager(scene_manager);
 		render_manager.setDrawParameters(device, window.getColorFormat(), window.getDepthFormat(), window.getMultisample());
-		if(!render_manager.create(device)) return;
+		#if TS_DEBUG
+			if(!render_manager.create(device, RenderManager.Flags.DefaultFlags, (uint progress, IntPtr data) => { Log.printf(Log.Level.Message, "RenderManager {0}%   \r", progress); })) return;
+			Log.print("\n");
+		#else
+			if(!render_manager.create(device)) return;
+		#endif
 		
 		// create render frame
 		RenderFrame render_frame = new RenderFrame(render_manager);
@@ -310,8 +338,8 @@ class TellusimCSharp {
 		light.setRadius(1000.0f);
 		
 		// create material
-		MaterialMetallic metallic_material = new MaterialMetallic(scene);
-		Material material = new Material(metallic_material);
+		Material metallic_material = new MaterialMetallic(scene);
+		Material material = new Material(in metallic_material);
 		material.setUniform("roughness_scale", 0.2f);
 		material.setUniform("metallic_scale", 0.0f);
 		
@@ -368,7 +396,7 @@ class TellusimCSharp {
 				
 				// update scene
 				if(!scene.create(device, main_async)) return false;
-				scene.setTime(Time.seconds());
+				scene.setTime(time);
 				scene.update();
 				
 				// update scene manager
