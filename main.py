@@ -1,4 +1,4 @@
-#!/usr/bin/env python3 -X dev
+#!/usr/bin/env python3
 
 # MIT License
 # 
@@ -148,15 +148,15 @@ def main(argv):
 	if not device: return 1
 	
 	# device features
-	Log.print(Log.Message, 'Features:\n{0}\n'.format(device.getFeatures()))
-	Log.print(Log.Message, 'Device: {0}\n'.format(device.getName()))
+	Log.printf(Log.Message, 'Features:\n%s\n', device.getFeatures())
+	Log.printf(Log.Message, 'Device: %s\n', device.getName())
 	
 	# create target
 	target = device.createTarget(window)
 	if not target: return 1
 	
 	# build info
-	Log.print(Log.Message, 'Build: {0}\n'.format(App.getBuildInfo()))
+	Log.printf(Log.Message, 'Build: %s\n', App.getBuildInfo())
 	
 	################################
 	# core test
@@ -166,7 +166,7 @@ def main(argv):
 	blob.writeString(title)
 	
 	blob.seek(0)
-	Log.print(Log.Message, 'Stream: {0}\n'.format(blob.readString()))
+	Log.printf(Log.Message, 'Stream: %s\n', blob.readString())
 	
 	################################
 	# platform test
@@ -211,7 +211,7 @@ def main(argv):
 		y = int(dialog.getPositionY())
 		width = int(dialog.getWidth())
 		height = int(dialog.getHeight())
-		Log.print(Log.Message, 'Dialog Updated {0} {1} {2}x{3}\n'.format(x, y, width, height))
+		Log.printf(Log.Message, 'Dialog Updated %d %d %ux%u\n', x, y, width, height)
 	dialog.setUpdatedCallback(updated_callback)
 	dialog.setAlign(Control.AlignCenter)
 	dialog.setSize(240.0, 180.0)
@@ -222,7 +222,7 @@ def main(argv):
 	
 	# create button
 	button = ControlButton(dialog, 'Button')
-	def clicked_callback(button): Log.print(Log.Message, '{0} Clicked\n'.format(button.getText()))
+	def clicked_callback(button): Log.printf(Log.Message, '%s Clicked\n', button.getText())
 	button.setClickedCallback(clicked_callback)
 	button.setAlign(Control.AlignExpand)
 	button.setMargin(0.0, 0.0, 0.0, 16.0)
@@ -263,7 +263,7 @@ def main(argv):
 	# create scene manager
 	scene_manager = SceneManager()
 	if True:
-		if not scene_manager.create(device, SceneManager.DefaultFlags, lambda progress: Log.print(Log.Message, 'SceneManager {0}%   \r'.format(progress))): return 1
+		if not scene_manager.create(device, SceneManager.DefaultFlags, lambda progress: Log.printf(Log.Message, 'SceneManager %u%%   \r', progress)): return 1
 		Log.print('\n')
 	else:
 		if not scene_manager.create(device): return 1
@@ -285,7 +285,7 @@ def main(argv):
 	render_manager = RenderManager(scene_manager)
 	render_manager.setDrawParameters(device, window.getColorFormat(), window.getDepthFormat(), window.getMultisample())
 	if True:
-		if not render_manager.create(device, RenderManager.DefaultFlags, lambda progress: Log.print(Log.Message, 'RenderManager {0}%   \r'.format(progress))): return 1
+		if not render_manager.create(device, RenderManager.DefaultFlags, lambda progress: Log.printf(Log.Message, 'RenderManager %u%%   \r', progress)): return 1
 		Log.print('\n')
 	else:
 		if not render_manager.create(device): return 1
@@ -341,7 +341,7 @@ def main(argv):
 	texture_time = 0.0
 	
 	# main loop
-	def main_callback():
+	def main_loop():
 		nonlocal texture_frame
 		nonlocal texture_ifps
 		nonlocal texture_time
@@ -361,7 +361,7 @@ def main(argv):
 			# resize frame
 			if render_frame.getWidth() != window.getWidth() or render_frame.getHeight() != window.getHeight():
 				if not render_frame.create(device, render_renderer, window.getWidth(), window.getHeight()): return False
-				Log.print(Log.Message, 'Frame Resized {0}x{1}\n'.format(window.getWidth(), window.getHeight()))
+				Log.printf(Log.Message, 'Frame Resized %ux%u\n', window.getWidth(), window.getHeight())
 			
 			# update diffuse texture
 			if Time.seconds() - texture_time > texture_ifps:
@@ -466,7 +466,7 @@ def main(argv):
 			parameters = bytearray()
 			parameters += Matrix4x4f.rotateZ(time * 16.0)
 			parameters += color
-			parameters += Vector4f(time)
+			parameters += Scalarf(time)
 			
 			# draw background
 			command.setPipeline(pipeline)
@@ -490,7 +490,7 @@ def main(argv):
 		
 		return True
 	
-	window.run(main_callback)
+	window.run(main_loop)
 	
 	# stop process thread
 	scene_manager.terminate()

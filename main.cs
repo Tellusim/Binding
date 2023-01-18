@@ -27,7 +27,7 @@ using System.Runtime.InteropServices;
 
 /*
  */
-class TellusimCSharp {
+class CSharp {
 	
 	/*
 	 */
@@ -524,21 +524,10 @@ class TellusimCSharp {
 		render_frame.destroyPtr();
 		render_manager.destroyPtr();
 		scene_manager.destroyPtr();
-		
-		slider_r.destroyPtr();
-		slider_g.destroyPtr();
-		slider_b.destroyPtr();
-		button.destroyPtr();
-		text.destroyPtr();
-		dialog.destroyPtr();
 		root.destroyPtr();
 		
-		pipeline.destroyPtr();
-		
-		canvas.destroyPtr();
-		target.destroyPtr();
-		device.destroyPtr();
-		window.destroyPtr();
+		// keep window alive
+		window.unacquirePtr();
 		
 		// done
 		Log.print("Done\n");

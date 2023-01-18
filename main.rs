@@ -42,11 +42,11 @@ fn create_mesh(steps: &Vector2u, radius: &Vector2f, texcoord: f32) -> Mesh {
 	let mut vertex: u32 = 0;
 	let isteps = Vector2f::new_s(1.0) / Vector2f::new_v2u(steps);
 	let aspect = radius.x / radius.y;
-	for j in 0..steps.y + 1 {
+	for j in 0 .. steps.y + 1 {
 		let ty = j as f32 * isteps.y;
 		let z = -f32::cos(ty * PI2 - PI05);
 		let r = f32::sin(ty * PI2 - PI05);
-		for i in 0..steps.x + 1 {
+		for i in 0 .. steps.x + 1 {
 			let tx = i as f32 * isteps.x;
 			let x = -f32::sin(tx * PI2);
 			let y = f32::cos(tx * PI2);
@@ -67,8 +67,8 @@ fn create_mesh(steps: &Vector2u, radius: &Vector2f, texcoord: f32) -> Mesh {
 	let mut indices = MeshIndices::new_with_type_size(MeshIndicesType::Quadrilateral, indices_format, num_indices);
 	
 	let mut index = 0;
-	for j in 0..steps.y {
-		for i in 0..steps.x {
+	for j in 0 .. steps.y {
+		for i in 0 .. steps.x {
 			vertex = (steps.x + 1) * j + i;
 			indices.set4(index, vertex, vertex + 1, vertex + steps.x + 2, vertex + steps.x + 1);
 			index += 4;
@@ -105,8 +105,8 @@ fn create_image(size: u32, frame: u32) -> Image {
 	
 	// fill image
 	let mut color = ImageColor::new_s(255);
-	for y in 0..size {
-		for x in 0..size {
+	for y in 0 .. size {
+		for x in 0 .. size {
 			let v = (((x as i32 - (frame ^ y) as i32) as u32 ^ (y + (frame ^ x))) & 255) as f32 / 63.0;
 			color.r = (f32::cos(PI * 1.0 + v) * 127.5 + 127.5) as u32;
 			color.g = (f32::cos(PI * 0.5 + v) * 127.5 + 127.5) as u32;
@@ -133,13 +133,13 @@ fn main() {
 	
 	window.set_close_clicked_callback({
 		let mut window = window.copy_ptr();
-		move || { window.stop(); }
+		move || { window.stop() }
 	});
 	
 	window.set_keyboard_pressed_callback({
 		let mut window = window.copy_ptr();
 		move |key: u32, _code: u32| {
-			if key == WindowKey::Esc as u32 { window.stop(); }
+			if key == WindowKey::Esc as u32 { window.stop() }
 			if key == WindowKey::F12 as u32 {
 				let mut image = Image::new();
 				if window.grab(&mut image) && image.save("screenshot.png") {
@@ -252,9 +252,9 @@ fn main() {
 	let mut slider_r = ControlSlider::new_with_parent_text_digits_value_min(Some(&dialog.to_control()), "R", 2, parameters.color.r as f64, 0.0, 1.0);
 	let mut slider_g = ControlSlider::new_with_parent_text_digits_value_min(Some(&dialog.to_control()), "G", 2, parameters.color.g as f64, 0.0, 1.0);
 	let mut slider_b = ControlSlider::new_with_parent_text_digits_value_min(Some(&dialog.to_control()), "B", 2, parameters.color.b as f64, 0.0, 1.0);
-	slider_r.set_changed_callback(|slider: ControlSlider| { parameters.color.r = slider.valuef32(); });
-	slider_g.set_changed_callback(|slider: ControlSlider| { parameters.color.g = slider.valuef32(); });
-	slider_b.set_changed_callback(|slider: ControlSlider| { parameters.color.b = slider.valuef32(); });
+	slider_r.set_changed_callback(|slider: ControlSlider| { parameters.color.r = slider.valuef32() });
+	slider_g.set_changed_callback(|slider: ControlSlider| { parameters.color.g = slider.valuef32() });
+	slider_b.set_changed_callback(|slider: ControlSlider| { parameters.color.b = slider.valuef32() });
 	slider_r.set_align(ControlAlign::ExpandX);
 	slider_g.set_align(ControlAlign::ExpandX);
 	slider_b.set_align(ControlAlign::ExpandX);
@@ -278,7 +278,7 @@ fn main() {
 	// create scene manager
 	let mut scene_manager = SceneManager::new();
 	if cfg!(debug_assertions) {
-		if !scene_manager.create_with_flags_func(&device, SceneManagerFlags::DefaultFlags, |progress: u32| { ts_logf!(Message, "SceneManager {0}%   \r", progress); }) { exit(1) }
+		if !scene_manager.create_with_flags_func(&device, SceneManagerFlags::DefaultFlags, |progress: u32| { ts_logf!(Message, "SceneManager {0}%   \r", progress) }) { exit(1) }
 		log::print("\n");
 	} else {
 		if !scene_manager.create(&device) { exit(1) }
@@ -304,7 +304,7 @@ fn main() {
 	let mut render_manager = RenderManager::new_with_manager(&mut scene_manager);
 	render_manager.set_draw_parameters_with_color_depth_multisample(&device, window.color_format(), window.depth_format(), window.multisample());
 	if cfg!(debug_assertions) {
-		if !render_manager.create_with_flags_func(&device, RenderManagerFlags::DefaultFlags, |progress: u32| { ts_logf!(Message, "RenderManager {0}%   \r", progress); }) { exit(1) }
+		if !render_manager.create_with_flags_func(&device, RenderManagerFlags::DefaultFlags, |progress: u32| { ts_logf!(Message, "RenderManager {0}%   \r", progress) }) { exit(1) }
 		log::print("\n");
 	} else {
 		if !render_manager.create(&device) { exit(1) }
@@ -374,7 +374,7 @@ fn main() {
 		Window::update();
 		
 		// render window
-		if !window.render() { return false; }
+		if !window.render() { return false }
 		
 		// update scene
 		{
@@ -404,12 +404,12 @@ fn main() {
 			graph.update_scene();
 			
 			// update scene
-			if !scene.create_with_async(&device, Some(&main_async)) { return false; }
+			if !scene.create_with_async(&device, Some(&main_async)) { return false }
 			scene.set_time(time);
 			scene.update();
 			
 			// update scene manager
-			if !scene_manager.update(&device, &mut main_async) { return false; }
+			if !scene_manager.update(&device, &mut main_async) { return false }
 		}
 		
 		// dispatch
@@ -459,7 +459,7 @@ fn main() {
 			
 			// mouse button
 			let mut buttons = ControlButtons::None;
-			if window.mouse_buttons().has_flag(WindowButton::Left | WindowButton::Left2) { buttons |= ControlButtons::Left; }
+			if window.mouse_buttons().has_flag(WindowButton::Left | WindowButton::Left2) { buttons |= ControlButtons::Left }
 			
 			// render texture
 			rect.set_texture(&mut render_frame.composite_texture());
@@ -500,19 +500,16 @@ fn main() {
 		target.end();
 		
 		// present window
-		if !window.present() { return false; }
+		if !window.present() { return false }
 		
 		// check device
-		if !device.check() { return false; }
+		if !device.check() { return false }
 		
 		true
 	}});
 	
 	// stop process thread
 	scene_manager.terminate();
-	
-	// finish context
-	window.finish();
 	
 	// clear scene
 	scene.clear();
