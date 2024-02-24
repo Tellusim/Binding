@@ -329,6 +329,7 @@ class CSharp {
 		CameraPerspective camera = new CameraPerspective(scene);
 		NodeCamera node_camera = new NodeCamera(graph, camera);
 		node_camera.setGlobalTransform(Matrix4x3d.placeTo(camera_position, new Vector3d(0.0), new Vector3d(0.0, 0.0, 1.0)));
+		render_frame.setCamera(node_camera);
 		
 		// create light
 		LightPoint light = new LightPoint(scene);
@@ -397,7 +398,7 @@ class CSharp {
 				// update scene
 				if(!scene.create(device, main_async)) return false;
 				scene.setTime(time);
-				scene.update();
+				scene.update(device);
 				
 				// update scene manager
 				if(!scene_manager.update(device, main_async)) return false;
@@ -409,11 +410,11 @@ class CSharp {
 				
 				// dispatch scene
 				scene_manager.dispatch(device, compute);
-				scene.dispatch(device, compute, node_camera);
+				scene.dispatch(device, compute);
 				
 				// dispatch render (multi-frame test)
 				RenderFrame[] render_frames = new RenderFrame[] { render_frame };
-				render_spatial.dispatchFrames(compute, node_camera, render_frames);
+				render_spatial.dispatchFrames(compute, render_frames);
 				render_spatial.dispatchObjects(compute, render_frames);
 				render_renderer.dispatchFrames(compute, render_frames);
 				
@@ -458,7 +459,7 @@ class CSharp {
 				if((window.getMouseButtons() & Window.Button.Left2) != Window.Button.None) buttons |= Control.Button.Left;
 				
 				// render texture
-				rect.setTexture(render_frame.getCompositeTexture());
+				rect.setTexture(render_frame.getCompositeTexture(), true);
 				rect.setTextureScale(width / window.getWidth(), height / window.getHeight());
 				rect.setTextureFlip(false, render_renderer.isTargetFlipped());
 				

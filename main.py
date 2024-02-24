@@ -312,6 +312,7 @@ def main(argv):
 	camera = CameraPerspective(scene)
 	node_camera = NodeCamera(graph, camera)
 	node_camera.setGlobalTransform(Matrix4x3d.placeTo(camera_position, Vector3d(0.0), Vector3d(0.0, 0.0, 1.0)))
+	render_frame.setCamera(node_camera);
 	
 	# create light
 	light = LightPoint(scene)
@@ -381,7 +382,7 @@ def main(argv):
 			# update scene
 			if not scene.create(device, main_async): return False
 			scene.setTime(time)
-			scene.update()
+			scene.update(device)
 			
 			# update scene manager
 			if not scene_manager.update(device, main_async): return False
@@ -393,11 +394,11 @@ def main(argv):
 			
 			# dispatch scene
 			scene_manager.dispatch(device, compute)
-			scene.dispatch(device, compute, node_camera)
+			scene.dispatch(device, compute)
 			
 			# dispatch render (multi-frame test)
 			render_frames = [ render_frame ]
-			render_spatial.dispatchFrames(compute, node_camera, render_frames)
+			render_spatial.dispatchFrames(compute, render_frames)
 			render_spatial.dispatchObjects(compute, render_frames)
 			render_renderer.dispatchFrames(compute, render_frames)
 			
@@ -442,7 +443,7 @@ def main(argv):
 			if window.getMouseButtons() & Window.ButtonLeft2: buttons |= Control.ButtonLeft
 			
 			# render texture
-			rect.setTexture(render_frame.getCompositeTexture())
+			rect.setTexture(render_frame.getCompositeTexture(), True)
 			rect.setTextureScale(width / window.getWidth(), height / window.getHeight())
 			rect.setTextureFlip(False, render_renderer.isTargetFlipped())
 			

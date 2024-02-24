@@ -332,6 +332,7 @@ fn main() {
 	let camera = CameraPerspective::new_with_scene(&mut scene);
 	let mut node_camera = NodeCamera::new_with_graph_camera(&mut graph, &mut camera.to_camera());
 	node_camera.set_global_transform(&Matrix4x3d::place_to(&camera_position, &Vector3d::new_s(0.0), &Vector3d::new(0.0, 0.0, 1.0)));
+	render_frame.set_camera(&mut node_camera);
 	
 	// create light
 	let mut light = LightPoint::new_with_scene(&mut scene);
@@ -406,7 +407,7 @@ fn main() {
 			// update scene
 			if !scene.create_with_async(&device, Some(&main_async)) { return false }
 			scene.set_time(time);
-			scene.update();
+			scene.update(&device);
 			
 			// update scene manager
 			if !scene_manager.update(&device, &mut main_async) { return false }
@@ -418,11 +419,11 @@ fn main() {
 			
 			// dispatch scene
 			scene_manager.dispatch(&device, &mut compute);
-			scene.dispatch(&device, &mut compute, &mut node_camera);
+			scene.dispatch(&device, &mut compute);
 			
 			// dispatch render (multi-frame test)
 			let render_frames: [RenderFrame; 1] = [ render_frame.copy_ptr() ];
-			render_spatial.dispatch_frames(&mut compute, &mut node_camera, &render_frames);
+			render_spatial.dispatch_frames(&mut compute, &render_frames);
 			render_spatial.dispatch_objects_with_frames(&mut compute, &render_frames);
 			render_renderer.dispatch_frames(&mut compute, &render_frames);
 		}
@@ -462,7 +463,7 @@ fn main() {
 			if window.mouse_buttons().has_flag(WindowButton::Left | WindowButton::Left2) { buttons |= ControlButtons::Left }
 			
 			// render texture
-			rect.set_texture(&mut render_frame.composite_texture());
+			rect.set_texture_with_linear(&mut render_frame.composite_texture(), true);
 			rect.set_texture_scale(width / window.width() as f32, height / window.height() as f32);
 			rect.set_texture_flip(false, render_renderer.is_target_flipped());
 			
@@ -492,7 +493,7 @@ fn main() {
 			command.set_uniform(0, parameters);
 			command.set_vertices(0, &vertices);
 			command.set_indices(&indices);
-			command.draw_elements_with_indices(3);
+			command.draw_elements(3);
 			
 			// draw canvas
 			canvas.draw_with_target(&mut command, &mut target);
