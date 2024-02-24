@@ -39,11 +39,11 @@ func create_mesh(_ steps: Vector2u,_ radius: Vector2f,_ texcoord: Float32) -> Me
 	var vertex = UInt32(0)
 	let isteps = Vector2f(1.0) / Vector2f(steps)
 	let aspect = radius.x / radius.y
-	for j in 0...steps.y {
+	for j in 0 ... steps.y {
 		let ty = Float32(j) * isteps.y
 		let z = -cos(ty * Pi2 - Pi05)
 		let r = sin(ty * Pi2 - Pi05)
-		for i in 0...steps.x {
+		for i in 0 ... steps.x {
 			let tx = Float32(i) * isteps.x
 			let x = -sin(tx * Pi2)
 			let y = cos(tx * Pi2)
@@ -64,8 +64,8 @@ func create_mesh(_ steps: Vector2u,_ radius: Vector2f,_ texcoord: Float32) -> Me
 	let indices = MeshIndices(MeshIndices.Kind.Quadrilateral, indices_format, num_indices)
 	
 	var index = UInt32(0)
-	for j in 0..<steps.y {
-		for i in 0..<steps.x {
+	for j in 0 ..< steps.y {
+		for i in 0 ..< steps.x {
 			vertex = (steps.x + 1) * j + i
 			indices.set(index, vertex, vertex + 1, vertex + steps.x + 2, vertex + steps.x + 1)
 			index += 4
@@ -102,8 +102,8 @@ func create_image(_ size: UInt32,_ frame: UInt32) -> Image {
 	
 	// fill image
 	var color = ImageColor(UInt32(255))
-	for y in 0..<size {
-		for x in 0..<size {
+	for y in 0 ..< size {
+		for x in 0 ..< size {
 			let v = Float32(((Int32(x) - Int32(frame ^ y)) ^ (Int32(y) + Int32(frame ^ x))) & 255) / 63.0
 			color.u.r = UInt32(cos(Pi * 1.0 + v) * 127.5 + 127.5)
 			color.u.g = UInt32(cos(Pi * 0.5 + v) * 127.5 + 127.5)
@@ -457,7 +457,7 @@ func main() -> Int32 {
 	 		// update controls
 	 		root.setViewport(width, height)
 	 		root.setMouse(mouse_x, mouse_y, buttons)
-	 		while(root.update(canvas.getScale(target))) { }
+	 		while root.update(canvas.getScale(target)) { }
 	 		
 	 		// create canvas
 	 		canvas.create(device, target)
