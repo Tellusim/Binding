@@ -101,14 +101,13 @@ func create_image(_ size: UInt32,_ frame: UInt32) -> Image {
 	let sampler = ImageSampler(image)
 	
 	// fill image
-	var color = ImageColor(UInt32(255))
 	for y in 0 ..< size {
 		for x in 0 ..< size {
 			let v = Float32(((Int32(x) - Int32(frame ^ y)) ^ (Int32(y) + Int32(frame ^ x))) & 255) / 63.0
-			color.u.r = UInt32(cos(Pi * 1.0 + v) * 127.5 + 127.5)
-			color.u.g = UInt32(cos(Pi * 0.5 + v) * 127.5 + 127.5)
-			color.u.b = UInt32(cos(Pi * 0.0 + v) * 127.5 + 127.5)
-			sampler.set2D(x, y, color)
+			let r = UInt32(cos(Pi * 1.0 + v) * 127.5 + 127.5)
+			let g = UInt32(cos(Pi * 0.5 + v) * 127.5 + 127.5)
+			let b = UInt32(cos(Pi * 0.0 + v) * 127.5 + 127.5)
+			sampler.set2D(x, y, ImageColor(r, g, b, 255))
 		}
 	}
 	
@@ -134,7 +133,7 @@ func main() -> Int32 {
 		if key == Window.Key.F12.rawValue {
 			let image = Image()
 			if window.grab(image) && image.save("screenshot.png") {
-				print("Screenshot")
+				Log.print(Log.Level.Message, "Screenshot\n")
 			}
 		}
 	}))
@@ -147,15 +146,15 @@ func main() -> Int32 {
 	if !device { return 1 }
 	
 	// device features
-	print("Features: ", device.getFeatures())
-	print("Device: ", device.getName())
+	Log.print(Log.Level.Message, "Features: \(device.getFeatures())\n")
+	Log.print(Log.Level.Message, "Device: \(device.getName())\n")
+	
+	// build info
+	Log.print(Log.Level.Message, "Build: \(App.getBuildInfo())\n")
 	
 	// create target
 	let target = device.createTarget(window)
 	if !target{ return 1 }
-	
-	// build info
-	print("Build: ", App.getBuildInfo())
 	
 	////////////////////////////////
 	// core test
@@ -165,7 +164,7 @@ func main() -> Int32 {
 	blob.writeString(title)
 	
 	blob.seek(0)
-	print("Stream: ", blob.readString())
+	Log.print(Log.Level.Message, "Stream: \(blob.readString())\n")
 	
 	////////////////////////////////
 	// platform test
@@ -210,7 +209,7 @@ func main() -> Int32 {
 		let y = dialog.getPositionY()
 		let width = dialog.getWidth()
 		let height = dialog.getHeight()
-		print("Dialog Updated \(x) \(y) \(width)x\(height)")
+		Log.printf(Log.Level.Message, "Dialog Updated %.0f %.0f %.0fx%.0f\n", x, y, width, height)
 	}))
 	dialog.setAlign(Control.Align.Center)
 	dialog.setSize(240.0, 180.0)
@@ -222,7 +221,7 @@ func main() -> Int32 {
 	// create button
 	let button = ControlButton(dialog, "Button")
 	button.setClickedCallback(ControlButton.ClickedFunction({ (button: ControlButton) in
-		print(button.getText(), "Clicked")
+		Log.print(Log.Level.Message, "\(button.getText()) Clicked\n")
 	}))
 	button.setAlign(Control.Align.Expand)
 	button.setMargin(0.0, 0.0, 0.0, 16.0)
@@ -268,7 +267,10 @@ func main() -> Int32 {
 	
 	// create scene manager
 	let scene_manager = SceneManager()
-	if !scene_manager.create(device) { return 1 }
+	if !scene_manager.create(device, SceneManager.Flags.DefaultFlags, SceneManager.CreateFunction({ (progress: UInt32) in
+		Log.printf(Log.Level.Message, "SceneManager %u%%   \r", progress)
+	})) { return 1 }
+	Log.print("\n")
 	
 	// process thread
 	class ProcessThread : Thread {
@@ -281,7 +283,7 @@ func main() -> Int32 {
 			while manager.isValidPtr() && !manager.isTerminated() {
 				if !manager.process(async) { Time.sleep(1000) }
 			}	
-			print("Thread Done")
+			Log.print(Log.Level.Message, "Thread Done\n")
 		}
 		var manager: SceneManager
 		var async: Async
@@ -296,7 +298,10 @@ func main() -> Int32 {
 	// create render manager
 	let render_manager = RenderManager(scene_manager)
 	render_manager.setDrawParameters(device, window.getColorFormat(), window.getDepthFormat(), window.getMultisample())
-	if !render_manager.create(device) { return 1 }
+	if !render_manager.create(device, RenderManager.Flags.DefaultFlags, RenderManager.CreateFunction({ (progress: UInt32) in
+		Log.printf(Log.Level.Message, "RenderManager %u%%   \r", progress)
+	})) { return 1 }
+	Log.print("\n")
 	
 	// create render frame
 	let render_frame = RenderFrame(render_manager)
@@ -368,7 +373,7 @@ func main() -> Int32 {
 			// resize frame
 			if render_frame.getWidth() != window.getWidth() || render_frame.getHeight() != window.getHeight() {
 				if !render_frame.create(device, render_renderer, window.getWidth(), window.getHeight()) { return false }
-				print("Frame Resized \(window.getWidth())x\(window.getHeight())")
+				Log.printf(Log.Level.Message, "Frame Resized %ux%u\n", window.getWidth(), window.getHeight())
 			}
 			
 			// update diffuse texture
@@ -515,7 +520,7 @@ func main() -> Int32 {
 	root.destroyPtr()
 	
 	// done
-	print("Done")
+	Log.print("Done\n")
 	
 	return 0
 }

@@ -151,12 +151,12 @@ def main(argv):
 	Log.printf(Log.Message, 'Features:\n%s\n', device.getFeatures())
 	Log.printf(Log.Message, 'Device: %s\n', device.getName())
 	
+	# build info
+	Log.printf(Log.Message, 'Build: %s\n', App.getBuildInfo())
+	
 	# create target
 	target = device.createTarget(window)
 	if not target: return 1
-	
-	# build info
-	Log.printf(Log.Message, 'Build: %s\n', App.getBuildInfo())
 	
 	################################
 	# core test

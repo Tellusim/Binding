@@ -151,7 +151,7 @@ class CSharp {
 			if(key == (uint)Window.Key.F12) {
 				Image image = new Image();
 				if(window.grab(image) && image.save("screenshot.png")) {
-					Log.printf(Log.Level.Message, "Screenshot\n");
+					Log.print(Log.Level.Message, "Screenshot\n");
 				}
 			}
 		});
@@ -167,12 +167,12 @@ class CSharp {
 		Log.printf(Log.Level.Message, "Features:\n{0}\n", device.getFeatures().ToString());
 		Log.printf(Log.Level.Message, "Device: {0}\n", device.getName());
 		
+		// build info
+		Log.printf(Log.Level.Message, "Build: {0}\n", App.getBuildInfo());
+		
 		// create target
 		Target target = device.createTarget(window);
 		if(!target) return;
-		
-		// build info
-		Log.printf(Log.Level.Message, "Build: {0}\n", App.getBuildInfo());
 		
 		////////////////////////////////
 		// core test

@@ -160,12 +160,12 @@ fn main() {
 	ts_logf!(Message, "Features:\n{0}\n", device.features());
 	ts_logf!(Message, "Device: {0}\n", device.name());
 	
+	// build info
+	ts_logf!(Message, "Build: {0}\n", App::build_info());
+	
 	// create target
 	let mut target = device.create_target_with_window(&mut window);
 	if !target.is_valid_ptr() { exit(1) }
-	
-	// build info
-	ts_logf!(Message, "Build: {0}\n", App::build_info());
 	
 	////////////////////////////////
 	// core test
