@@ -6,4 +6,8 @@ https://tellusim.com/
 
 ---
 
+![Python](binding_python.jpg)
+![CSharp](binding_csharp.jpg)
 ![Swift](binding_swift.jpg)
+![Java](binding_java.jpg)
+![Rust](binding_rust.jpg)
