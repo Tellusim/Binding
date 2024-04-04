@@ -20,7 +20,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-import tellusim.*
+package com.main
+
+import com.tellusim.*
 
 import kotlin.math.*
 
@@ -533,6 +535,9 @@ fun main(args: Array<String>) {
 	render_manager.destroyPtr()
 	scene_manager.destroyPtr()
 	root.destroyPtr()
+	
+	// keep window alive
+	window.unacquirePtr()
 	
 	// done
 	Log.print(Log.Level.Message, "Done\n")
