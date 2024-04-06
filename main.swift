@@ -116,7 +116,7 @@ func create_image(_ size: UInt32,_ frame: UInt32) -> Image {
 
 /*
  */
-func main() -> Int32 {
+func main_() -> Int32 {
 	
 	// create app
 	let app = App()
@@ -443,29 +443,29 @@ func main() -> Int32 {
 		// update interface
 		if true {
 			
-	 		// window size
-	 		let height = Float32(app.getHeight())
-	 		let width = floor(height * Float32(window.getWidth()) / Float32(window.getHeight()))
-	 		let mouse_x = width * Float32(window.getMouseX()) / Float32(window.getWidth())
-	 		let mouse_y = height * Float32(window.getMouseY()) / Float32(window.getHeight())
-	 		
-	 		// mouse button
-	 		var buttons = Control.Button.None
-	 		if (window.getMouseButtons() & Window.Button.Left) != Window.Button.None { buttons |= Control.Button.Left }
-	 		if (window.getMouseButtons() & Window.Button.Left2) != Window.Button.None { buttons |= Control.Button.Left }
-	 		
-	 		// render texture
+			// window size
+			let height = Float32(app.getHeight())
+			let width = floor(height * Float32(window.getWidth()) / Float32(window.getHeight()))
+			let mouse_x = width * Float32(window.getMouseX()) / Float32(window.getWidth())
+			let mouse_y = height * Float32(window.getMouseY()) / Float32(window.getHeight())
+			
+			// mouse button
+			var buttons = Control.Button.None
+			if (window.getMouseButtons() & Window.Button.Left) != Window.Button.None { buttons |= Control.Button.Left }
+			if (window.getMouseButtons() & Window.Button.Left2) != Window.Button.None { buttons |= Control.Button.Left }
+			
+			// render texture
 			rect.setTexture(render_frame.getCompositeTexture(), true)
 			rect.setTextureScale(width / Float32(window.getWidth()), height / Float32(window.getHeight()))
 			rect.setTextureFlip(false, render_renderer.isTargetFlipped())
-	 		
-	 		// update controls
-	 		root.setViewport(width, height)
-	 		root.setMouse(mouse_x, mouse_y, buttons)
-	 		while root.update(canvas.getScale(target)) { }
-	 		
-	 		// create canvas
-	 		canvas.create(device, target)
+			
+			// update controls
+			root.setViewport(width, height)
+			root.setMouse(mouse_x, mouse_y, buttons)
+			while root.update(canvas.getScale(target)) { }
+			
+			// create canvas
+			canvas.create(device, target)
 		}
 		
 		// window target
@@ -527,4 +527,42 @@ func main() -> Int32 {
 
 /*
  */
-print(main())
+#if IOS
+	
+	import UIKit
+	
+	class AppDelegate: UIResponder, UIApplicationDelegate {
+		
+		func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+			Log.print(Log.Level.Verbose, "didFinishLaunchingWithOptions(): is called\n")
+			DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+				chdir(Bundle.main.bundlePath)
+				Log.printf(Log.Level.Message, "main: %d\n", main_())
+			}
+			return true
+		}
+		
+		func applicationWillResignActive(_ application: UIApplication) {
+			Log.print(Log.Level.Verbose, "applicationWillResignActive(): is called\n")
+		}
+		
+		func applicationDidEnterBackground(_ application: UIApplication) {
+			Log.print(Log.Level.Verbose, "applicationDidEnterBackground(): is called\n")
+		}
+		
+		func applicationWillEnterForeground(_ application: UIApplication) {
+			Log.print(Log.Level.Verbose, "applicationWillEnterForeground(): is called\n")
+		}
+		
+		func applicationDidBecomeActive(_ application: UIApplication) {
+			Log.print(Log.Level.Verbose, "applicationDidBecomeActive(): is called\n")
+		}
+	}
+	
+	UIApplicationMain(CommandLine.argc, CommandLine.unsafeArgv, nil, NSStringFromClass(AppDelegate.self))
+	
+#else
+	
+	Log.printf(Log.Level.Message, "main: %d\n", main_())
+	
+#endif
