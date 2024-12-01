@@ -529,6 +529,9 @@ fun main(args: Array<String>) {
 	scene_manager.update(device, main_async)
 	window.finish()
 	
+	// wait thread
+	process_thread.join();
+	
 	// destroy resources
 	scene.destroyPtr()
 	render_frame.destroyPtr()

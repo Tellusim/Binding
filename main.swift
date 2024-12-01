@@ -167,6 +167,28 @@ func main_() -> Int32 {
 	Log.print(Log.Level.Message, "Stream: \(blob.readString())\n")
 	
 	////////////////////////////////
+	// bounds test
+	////////////////////////////////
+	
+	// 32-bit floating point
+	var bound_boxf = BoundBoxf(-Vector3f.one, Vector3f.one)
+	var bound_spheref = BoundSpheref(bound_boxf)
+	let bound_frustumf = BoundFrustumf(Matrix4x4f.perspective(60.0, 1.0, 0.1, 1000.0), Matrix4x4f.lookAt(Vector3f.one, Vector3f.zero, Vector3f(0.0, 0.0, 1.0)))
+	Log.print(Log.Level.Message, "\(bound_boxf) \(bound_frustumf.inside(bound_boxf)) \(bound_spheref) \(bound_frustumf.inside(bound_spheref))\n")
+	bound_boxf = Matrix4x3f.translate(10.0, 0.0, 0.0) * bound_boxf
+	bound_spheref = Matrix4x4f.translate(10.0, 0.0, 0.0) * bound_spheref
+	Log.print(Log.Level.Message, "\(bound_boxf) \(bound_frustumf.inside(bound_boxf)) \(bound_spheref) \(bound_frustumf.inside(bound_spheref))\n")
+	
+	// 64-bit floating point
+	var bound_boxd = BoundBoxd(-Vector3d.one, Vector3d.one)
+	var bound_sphered = BoundSphered(bound_boxd)
+	let bound_frustumd = BoundFrustumd(Matrix4x4d.perspective(60.0, 1.0, 0.1, 1000.0), Matrix4x4d.lookAt(Vector3d.one, Vector3d.zero, Vector3d(0.0, 0.0, 1.0)))
+	Log.print(Log.Level.Message, "\(bound_boxd) \(bound_frustumd.inside(bound_boxd)) \(bound_sphered) \(bound_frustumd.inside(bound_sphered))\n")
+	bound_boxd = Matrix4x3d.translate(10.0, 0.0, 0.0) * bound_boxd
+	bound_sphered = Matrix4x4d.translate(10.0, 0.0, 0.0) * bound_sphered
+	Log.print(Log.Level.Message, "\(bound_boxd) \(bound_frustumd.inside(bound_boxd)) \(bound_sphered) \(bound_frustumd.inside(bound_sphered))\n")
+	
+	////////////////////////////////
 	// platform test
 	////////////////////////////////
 	
@@ -520,7 +542,7 @@ func main_() -> Int32 {
 	root.destroyPtr()
 	
 	// done
-	Log.print("Done\n")
+	Log.print(Log.Level.Message, "Done\n")
 	
 	return 0
 }

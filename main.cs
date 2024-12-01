@@ -185,6 +185,28 @@ class CSharp {
 		Log.printf(Log.Level.Message, "Stream: {0}\n", blob.readString());
 		
 		////////////////////////////////
+		// bounds test
+		////////////////////////////////
+		
+		// 32-bit floating point
+		BoundBoxf bound_boxf = new BoundBoxf(-Vector3f.one, Vector3f.one);
+		BoundSpheref bound_spheref = new BoundSpheref(bound_boxf);
+		BoundFrustumf bound_frustumf = new BoundFrustumf(Matrix4x4f.perspective(60.0f, 1.0f, 0.1f, 1000.0f), Matrix4x4f.lookAt(Vector3f.one, Vector3f.zero, new Vector3f(0.0f, 0.0f, 1.0f)));
+		Log.printf(Log.Level.Message, "{0} {1} {2} {3}\n", bound_boxf, bound_frustumf.inside(bound_boxf), bound_spheref, bound_frustumf.inside(bound_spheref));
+		bound_boxf = Matrix4x3f.translate(10.0f, 0.0f, 0.0f) * bound_boxf;
+		bound_spheref = Matrix4x4f.translate(10.0f, 0.0f, 0.0f) * bound_spheref;
+		Log.printf(Log.Level.Message, "{0} {1} {2} {3}\n", bound_boxf, bound_frustumf.inside(bound_boxf), bound_spheref, bound_frustumf.inside(bound_spheref));
+		
+		// 64-bit floating point
+		BoundBoxd bound_boxd = new BoundBoxd(-Vector3d.one, Vector3d.one);
+		BoundSphered bound_sphered = new BoundSphered(bound_boxd);
+		BoundFrustumd bound_frustumd = new BoundFrustumd(Matrix4x4d.perspective(60.0, 1.0, 0.1, 1000.0), Matrix4x4d.lookAt(Vector3d.one, Vector3d.zero, new Vector3d(0.0, 0.0, 1.0)));
+		Log.printf(Log.Level.Message, "{0} {1} {2} {3}\n", bound_boxd, bound_frustumd.inside(bound_boxd), bound_sphered, bound_frustumd.inside(bound_sphered));
+		bound_boxd = Matrix4x3d.translate(10.0, 0.0, 0.0) * bound_boxd;
+		bound_sphered = Matrix4x4d.translate(10.0, 0.0, 0.0) * bound_sphered;
+		Log.printf(Log.Level.Message, "{0} {1} {2} {3}\n", bound_boxd, bound_frustumd.inside(bound_boxd), bound_sphered, bound_frustumd.inside(bound_sphered));
+		
+		////////////////////////////////
 		// platform test
 		////////////////////////////////
 		
@@ -278,10 +300,10 @@ class CSharp {
 		// create scene manager
 		SceneManager scene_manager = new SceneManager();
 		#if TS_DEBUG
-			if(!scene_manager.create(device, SceneManager.Flags.DefaultFlags, (uint progress, IntPtr data) => { Log.printf(Log.Level.Message, "SceneManager {0}%   \r", progress); })) return;
+			if(!scene_manager.create(device, SceneManager.Flags.DefaultFlags, (uint progress, IntPtr data) => { Log.printf(Log.Level.Message, "SceneManager {0}%   \r", progress); }, main_async)) return;
 			Log.print("\n");
 		#else
-			if(!scene_manager.create(device)) return;
+			if(!scene_manager.create(device, SceneManager.Flags.DefaultFlags, null, main_async)) return;
 		#endif
 		
 		// process thread
@@ -301,10 +323,10 @@ class CSharp {
 		RenderManager render_manager = new RenderManager(scene_manager);
 		render_manager.setDrawParameters(device, window.getColorFormat(), window.getDepthFormat(), window.getMultisample());
 		#if TS_DEBUG
-			if(!render_manager.create(device, RenderManager.Flags.DefaultFlags, (uint progress, IntPtr data) => { Log.printf(Log.Level.Message, "RenderManager {0}%   \r", progress); })) return;
+			if(!render_manager.create(device, RenderManager.Flags.DefaultFlags, (uint progress, IntPtr data) => { Log.printf(Log.Level.Message, "RenderManager {0}%   \r", progress); }, main_async)) return;
 			Log.print("\n");
 		#else
-			if(!render_manager.create(device)) return;
+			if(!render_manager.create(device, RenderManager.Flags.DefaultFlags, null, main_async)) return;
 		#endif
 		
 		// create render frame
@@ -520,6 +542,9 @@ class CSharp {
 		scene_manager.update(device, main_async);
 		window.finish();
 		
+		// wait thread
+		process_thread.Join();
+		
 		// destroy resources
 		scene.destroyPtr();
 		render_frame.destroyPtr();
@@ -531,6 +556,6 @@ class CSharp {
 		window.unacquirePtr();
 		
 		// done
-		Log.print("Done\n");
+		Log.print(Log.Level.Message, "Done\n");
 	}
 }

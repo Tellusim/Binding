@@ -178,6 +178,28 @@ fn main() {
 	ts_logf!(Message, "Stream: {0}\n", blob.read_string());
 	
 	////////////////////////////////
+	// bounds test
+	////////////////////////////////
+	
+	// 32-bit floating point
+	let mut bound_boxf = BoundBoxf::new(&-Vector3f::one(), &Vector3f::one());
+	let mut bound_spheref = BoundSpheref::new_bb(&bound_boxf);
+	let bound_frustumf = BoundFrustumf::new_pm(&Matrix4x4f::perspective(60.0, 1.0, 0.1, 1000.0), &Matrix4x4f::look_at(&Vector3f::one(), &Vector3f::zero(), &Vector3f::new(0.0, 0.0, 1.0)));
+	ts_logf!(Message, "{0} {1} {2} {3}\n", bound_boxf, bound_frustumf.inside_bb(&bound_boxf), bound_spheref, bound_frustumf.inside_bs(&bound_spheref));
+	bound_boxf = Matrix4x3f::translate(10.0, 0.0, 0.0) * bound_boxf;
+	bound_spheref = Matrix4x4f::translate(10.0, 0.0, 0.0) * bound_spheref;
+	ts_logf!(Message, "{0} {1} {2} {3}\n", bound_boxf, bound_frustumf.inside_bb(&bound_boxf), bound_spheref, bound_frustumf.inside_bs(&bound_spheref));
+	
+	// 64-bit floating point
+	let mut bound_boxd = BoundBoxd::new(&-Vector3d::one(), &Vector3d::one());
+	let mut bound_sphered = BoundSphered::new_bb(&bound_boxd);
+	let bound_frustumd = BoundFrustumd::new_pm(&Matrix4x4d::perspective(60.0, 1.0, 0.1, 1000.0), &Matrix4x4d::look_at(&Vector3d::one(), &Vector3d::zero(), &Vector3d::new(0.0, 0.0, 1.0)));
+	ts_logf!(Message, "{0} {1} {2} {3}\n", bound_boxd, bound_frustumd.inside_bb(&bound_boxd), bound_sphered, bound_frustumd.inside_bs(&bound_sphered));
+	bound_boxd = Matrix4x3d::translate(10.0, 0.0, 0.0) * bound_boxd;
+	bound_sphered = Matrix4x4d::translate(10.0, 0.0, 0.0) * bound_sphered;
+	ts_logf!(Message, "{0} {1} {2} {3}\n", bound_boxd, bound_frustumd.inside_bb(&bound_boxd), bound_sphered, bound_frustumd.inside_bs(&bound_sphered));
+	
+	////////////////////////////////
 	// platform test
 	////////////////////////////////
 	
@@ -278,7 +300,7 @@ fn main() {
 	// create scene manager
 	let mut scene_manager = SceneManager::new();
 	if cfg!(debug_assertions) {
-		if !scene_manager.create_with_flags_func(&device, SceneManagerFlags::DefaultFlags, |progress: u32| { ts_logf!(Message, "SceneManager {0}%   \r", progress) }) { exit(1) }
+		if !scene_manager.create_with_flags_func_async(&device, SceneManagerFlags::DefaultFlags, |progress: u32| { ts_logf!(Message, "SceneManager {0}%   \r", progress) }, Some(&main_async)) { exit(1) }
 		log::print("\n");
 	} else {
 		if !scene_manager.create(&device) { exit(1) }
@@ -304,7 +326,7 @@ fn main() {
 	let mut render_manager = RenderManager::new_with_manager(&mut scene_manager);
 	render_manager.set_draw_parameters_with_color_depth_multisample(&device, window.color_format(), window.depth_format(), window.multisample());
 	if cfg!(debug_assertions) {
-		if !render_manager.create_with_flags_func(&device, RenderManagerFlags::DefaultFlags, |progress: u32| { ts_logf!(Message, "RenderManager {0}%   \r", progress) }) { exit(1) }
+		if !render_manager.create_with_flags_func_async(&device, RenderManagerFlags::DefaultFlags, |progress: u32| { ts_logf!(Message, "RenderManager {0}%   \r", progress) }, Some(&main_async)) { exit(1) }
 		log::print("\n");
 	} else {
 		if !render_manager.create(&device) { exit(1) }
@@ -521,5 +543,5 @@ fn main() {
 	process_thread.join().ok();
 	
 	// done
-	log::print("Done\n");
+	ts_log!(Message, "Done\n");
 }

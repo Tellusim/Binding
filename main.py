@@ -125,10 +125,10 @@ def main(argv):
 	if not app.create(PlatformAny): return 1
 	
 	# create Window
-	window = Window(app.getPlatform(), app.getDevice())
+	window = Window(app.platform, app.device)
 	if not window: return 1
 	
-	window.setSize(app.getWidth(), app.getHeight())
+	window.setSize(app.width, app.height)
 	window.setCloseClickedCallback(lambda: window.stop())
 	
 	def clicked_callback(key, code):
@@ -140,7 +140,7 @@ def main(argv):
 	
 	window.setKeyboardPressedCallback(clicked_callback)
 	
-	title = window.getPlatformName() + ' Tellusim::Python'
+	title = window.platform_name + ' Tellusim::Python'
 	if not window.create(title, Window.DefaultFlags | Window.FlagVerticalSync) or not window.setHidden(False): return 1
 	
 	# create device
@@ -148,8 +148,8 @@ def main(argv):
 	if not device: return 1
 	
 	# device features
-	Log.printf(Log.Message, 'Features:\n%s\n', device.getFeatures())
-	Log.printf(Log.Message, 'Device: %s\n', device.getName())
+	Log.printf(Log.Message, 'Features:\n%s\n', device.features)
+	Log.printf(Log.Message, 'Device: %s\n', device.name)
 	
 	# build info
 	Log.printf(Log.Message, 'Build: %s\n', App.getBuildInfo())
@@ -169,14 +169,36 @@ def main(argv):
 	Log.printf(Log.Message, 'Stream: %s\n', blob.readString())
 	
 	################################
+	# bounds test
+	################################
+	
+	# 32-bit floating point
+	bound_boxf = BoundBoxf(-Vector3f.one, Vector3f.one)
+	bound_spheref = BoundSpheref(bound_boxf)
+	bound_frustumf = BoundFrustumf(Matrix4x4f.perspective(60.0, 1.0, 0.1, 1000.0), Matrix4x4f.lookAt(Vector3f.one, Vector3f.zero, Vector3f(0.0, 0.0, 1.0)))
+	Log.printf(Log.Message, "%s %u %s %u\n", str(bound_boxf), bound_frustumf.inside(bound_boxf), str(bound_spheref), bound_frustumf.inside(bound_spheref))
+	bound_boxf = Matrix4x3f.translate(10.0, 0.0, 0.0) * bound_boxf
+	bound_spheref = Matrix4x4f.translate(10.0, 0.0, 0.0) * bound_spheref
+	Log.printf(Log.Message, "%s %u %s %u\n", str(bound_boxf), bound_frustumf.inside(bound_boxf), str(bound_spheref), bound_frustumf.inside(bound_spheref))
+	
+	# 64-bit floating point
+	bound_boxd = BoundBoxd(-Vector3d.one, Vector3d.one)
+	bound_sphered = BoundSphered(bound_boxd)
+	bound_frustumd = BoundFrustumd(Matrix4x4d.perspective(60.0, 1.0, 0.1, 1000.0), Matrix4x4d.lookAt(Vector3d.one, Vector3d.zero, Vector3d(0.0, 0.0, 1.0)))
+	Log.printf(Log.Message, "%s %u %s %u\n", str(bound_boxd), bound_frustumd.inside(bound_boxd), str(bound_sphered), bound_frustumd.inside(bound_sphered))
+	bound_boxd = Matrix4x3d.translate(10.0, 0.0, 0.0) * bound_boxd
+	bound_sphered = Matrix4x4d.translate(10.0, 0.0, 0.0) * bound_sphered
+	Log.printf(Log.Message, "%s %u %s %u\n", str(bound_boxd), bound_frustumd.inside(bound_boxd), str(bound_sphered), bound_frustumd.inside(bound_sphered))
+	
+	################################
 	# platform test
 	################################
 	
 	# create pipeline
 	pipeline = device.createPipeline()
 	pipeline.setUniformMask(0, Shader.MaskFragment)
-	pipeline.setColorFormat(window.getColorFormat())
-	pipeline.setDepthFormat(window.getDepthFormat())
+	pipeline.setColorFormat(window.color_format)
+	pipeline.setDepthFormat(window.depth_format)
 	pipeline.addAttribute(Pipeline.AttributePosition, FormatRGf32, 0, 0, 8)
 	if not pipeline.loadShaderGLSL(Shader.TypeVertex, 'main.shader', 'VERTEX_SHADER=1'): return 1
 	if not pipeline.loadShaderGLSL(Shader.TypeFragment, 'main.shader', 'FRAGMENT_SHADER=1'): return 1
@@ -207,10 +229,10 @@ def main(argv):
 	# create dialog
 	dialog = ControlDialog(root, 1, 8.0, 8.0)
 	def updated_callback(dialog):
-		x = int(dialog.getPositionX())
-		y = int(dialog.getPositionY())
-		width = int(dialog.getWidth())
-		height = int(dialog.getHeight())
+		x = int(dialog.position_x)
+		y = int(dialog.position_y)
+		width = int(dialog.width)
+		height = int(dialog.height)
 		Log.printf(Log.Message, 'Dialog Updated %d %d %ux%u\n', x, y, width, height)
 	dialog.setUpdatedCallback(updated_callback)
 	dialog.setAlign(Control.AlignCenter)
@@ -222,7 +244,7 @@ def main(argv):
 	
 	# create button
 	button = ControlButton(dialog, 'Button')
-	def clicked_callback(button): Log.printf(Log.Message, '%s Clicked\n', button.getText())
+	def clicked_callback(button): Log.printf(Log.Message, '%s Clicked\n', button.text)
 	button.setClickedCallback(clicked_callback)
 	button.setAlign(Control.AlignExpand)
 	button.setMargin(0.0, 0.0, 0.0, 16.0)
@@ -234,9 +256,9 @@ def main(argv):
 	slider_r = ControlSlider(dialog, 'R', 2, color.r, 0.0, 1.0)
 	slider_g = ControlSlider(dialog, 'G', 2, color.g, 0.0, 1.0)
 	slider_b = ControlSlider(dialog, 'B', 2, color.b, 0.0, 1.0)
-	def changed_r_callback(slider): color.r = slider.getValuef32()
-	def changed_g_callback(slider): color.g = slider.getValuef32()
-	def changed_b_callback(slider): color.b = slider.getValuef32()
+	def changed_r_callback(slider): color.r = slider.valuef32
+	def changed_g_callback(slider): color.g = slider.valuef32
+	def changed_b_callback(slider): color.b = slider.valuef32
 	slider_r.setChangedCallback(changed_r_callback)
 	slider_g.setChangedCallback(changed_g_callback)
 	slider_b.setChangedCallback(changed_b_callback)
@@ -263,10 +285,10 @@ def main(argv):
 	# create scene manager
 	scene_manager = SceneManager()
 	if True:
-		if not scene_manager.create(device, SceneManager.DefaultFlags, lambda progress: Log.printf(Log.Message, 'SceneManager %u%%   \r', progress)): return 1
+		if not scene_manager.create(device, SceneManager.DefaultFlags, lambda progress: Log.printf(Log.Message, 'SceneManager %u%%   \r', progress), main_async): return 1
 		Log.print('\n')
 	else:
-		if not scene_manager.create(device): return 1
+		if not scene_manager.create(device, tasks = main_async): return 1
 	
 	# process thread
 	def process_callback():
@@ -283,26 +305,26 @@ def main(argv):
 	
 	# create render manager
 	render_manager = RenderManager(scene_manager)
-	render_manager.setDrawParameters(device, window.getColorFormat(), window.getDepthFormat(), window.getMultisample())
+	render_manager.setDrawParameters(device, window.color_format, window.depth_format, window.multisample)
 	if True:
-		if not render_manager.create(device, RenderManager.DefaultFlags, lambda progress: Log.printf(Log.Message, 'RenderManager %u%%   \r', progress)): return 1
+		if not render_manager.create(device, RenderManager.DefaultFlags, lambda progress: Log.printf(Log.Message, 'RenderManager %u%%   \r', progress), main_async): return 1
 		Log.print('\n')
 	else:
-		if not render_manager.create(device): return 1
+		if not render_manager.create(device, tasks = main_async): return 1
 	
 	# create render frame
 	render_frame = RenderFrame(render_manager)
 	
 	# render resources
-	render_renderer = render_manager.getRenderer()
-	render_spatial = render_manager.getSpatial()
+	render_renderer = render_manager.renderer
+	render_spatial = render_manager.spatial
 	
 	################################
 	# scene test
 	################################
 	
 	# create scene
-	scene = Scene(scene_manager, render_renderer.getSceneRender())
+	scene = Scene(scene_manager, render_renderer.scene_render)
 	
 	# create graph
 	graph = Graph(scene)
@@ -312,7 +334,7 @@ def main(argv):
 	camera = CameraPerspective(scene)
 	node_camera = NodeCamera(graph, camera)
 	node_camera.setGlobalTransform(Matrix4x3d.placeTo(camera_position, Vector3d(0.0), Vector3d(0.0, 0.0, 1.0)))
-	render_frame.setCamera(node_camera);
+	render_frame.setCamera(node_camera)
 	
 	# create light
 	light = LightPoint(scene)
@@ -360,9 +382,9 @@ def main(argv):
 			render_manager.update()
 			
 			# resize frame
-			if render_frame.getWidth() != window.getWidth() or render_frame.getHeight() != window.getHeight():
-				if not render_frame.create(device, render_renderer, window.getWidth(), window.getHeight()): return False
-				Log.printf(Log.Message, 'Frame Resized %ux%u\n', window.getWidth(), window.getHeight())
+			if render_frame.width != window.width or render_frame.height != window.height:
+				if not render_frame.create(device, render_renderer, window.width, window.height): return False
+				Log.printf(Log.Message, 'Frame Resized %ux%u\n', window.width, window.height)
 			
 			# update diffuse texture
 			if Time.seconds() - texture_time > texture_ifps:
@@ -432,19 +454,19 @@ def main(argv):
 		if True:
 			
 			# window size
-			height = app.getHeight()
-			width = math.floor(height * window.getWidth() / window.getHeight())
-			mouse_x = width * window.getMouseX() / window.getWidth()
-			mouse_y = height * window.getMouseY() / window.getHeight()
+			height = app.height
+			width = math.floor(height * window.width / window.height)
+			mouse_x = width * window.mouse_x / window.width
+			mouse_y = height * window.mouse_y / window.height
 			
 			# mouse button
 			buttons = Control.ButtonNone
-			if window.getMouseButtons() & Window.ButtonLeft: buttons |= Control.ButtonLeft
-			if window.getMouseButtons() & Window.ButtonLeft2: buttons |= Control.ButtonLeft
+			if window.mouse_buttons & Window.ButtonLeft: buttons |= Control.ButtonLeft
+			if window.mouse_buttons & Window.ButtonLeft2: buttons |= Control.ButtonLeft
 			
 			# render texture
-			rect.setTexture(render_frame.getCompositeTexture(), True)
-			rect.setTextureScale(width / window.getWidth(), height / window.getHeight())
+			rect.setTexture(render_frame.composite_texture, True)
+			rect.setTextureScale(width / window.width, height / window.height)
 			rect.setTextureFlip(False, render_renderer.isTargetFlipped())
 			
 			# update controls
@@ -487,7 +509,7 @@ def main(argv):
 		if not window.present(): return False
 		
 		# check device
-		if not device.check(): return False;
+		if not device.check(): return False
 		
 		return True
 	
@@ -508,7 +530,7 @@ def main(argv):
 	thread.join()
 	
 	# done
-	Log.print('Done\n')
+	Log.print(Log.Message, 'Done\n')
 	
 	return 0
 

@@ -188,6 +188,28 @@ public class main {
 		Log.printf(Log.Level.Message, "Stream: %s\n", blob.readString());
 		
 		////////////////////////////////
+		// bounds test
+		////////////////////////////////
+		
+		// 32-bit floating point
+		BoundBoxf bound_boxf = new BoundBoxf(Vector3f.one().neg(), Vector3f.one());
+		BoundSpheref bound_spheref = new BoundSpheref(bound_boxf);
+		BoundFrustumf bound_frustumf = new BoundFrustumf(Matrix4x4f.perspective(60.0f, 1.0f, 0.1f, 1000.0f), Matrix4x4f.lookAt(Vector3f.one(), Vector3f.zero(), new Vector3f(0.0f, 0.0f, 1.0f)));
+		Log.printf(Log.Level.Message, "%s %b %s %b\n", bound_boxf.toString(), bound_frustumf.inside(bound_boxf), bound_spheref.toString(), bound_frustumf.inside(bound_spheref));
+		bound_boxf = Matrix4x3f.translate(10.0f, 0.0f, 0.0f).mul(bound_boxf);
+		bound_spheref = Matrix4x4f.translate(10.0f, 0.0f, 0.0f).mul(bound_spheref);
+		Log.printf(Log.Level.Message, "%s %b %s %b\n", bound_boxf.toString(), bound_frustumf.inside(bound_boxf), bound_spheref.toString(), bound_frustumf.inside(bound_spheref));
+		
+		// 64-bit floating point
+		BoundBoxd bound_boxd = new BoundBoxd(Vector3d.one().neg(), Vector3d.one());
+		BoundSphered bound_sphered = new BoundSphered(bound_boxd);
+		BoundFrustumd bound_frustumd = new BoundFrustumd(Matrix4x4d.perspective(60.0, 1.0, 0.1, 1000.0), Matrix4x4d.lookAt(Vector3d.one(), Vector3d.zero(), new Vector3d(0.0, 0.0, 1.0)));
+		Log.printf(Log.Level.Message, "%s %b %s %b\n", bound_boxd.toString(), bound_frustumd.inside(bound_boxd), bound_sphered.toString(), bound_frustumd.inside(bound_sphered));
+		bound_boxd = Matrix4x3d.translate(10.0, 0.0, 0.0).mul(bound_boxd);
+		bound_sphered = Matrix4x4d.translate(10.0, 0.0, 0.0).mul(bound_sphered);
+		Log.printf(Log.Level.Message, "%s %b %s %b\n", bound_boxd.toString(), bound_frustumd.inside(bound_boxd), bound_sphered.toString(), bound_frustumd.inside(bound_sphered));
+		
+		////////////////////////////////
 		// platform test
 		////////////////////////////////
 		
@@ -285,7 +307,7 @@ public class main {
 			public void run(int progress) {
 				Log.printf(Log.Level.Message, "SceneManager %d%%   \r", progress);
 			}
-		})) return;
+		}, main_async)) return;
 		Log.print("\n");
 		
 		// process thread
@@ -311,7 +333,7 @@ public class main {
 			public void run(int progress) {
 				Log.printf(Log.Level.Message, "RenderManager %d%%   \r", progress);
 			}
-		})) return;
+		}, main_async)) return;
 		Log.print("\n");
 		
 		// create render frame
@@ -531,6 +553,13 @@ public class main {
 		scene.clear();
 		scene_manager.update(device, main_async);
 		window.finish();
+		
+		// wait thread
+		try {
+			process_thread.join();
+		} catch(Exception e) {
+			System.out.println(e);
+		}
 		
 		// destroy resources
 		scene.destroyPtr();
